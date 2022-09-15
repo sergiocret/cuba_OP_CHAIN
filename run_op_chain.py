@@ -8,6 +8,7 @@ import sys
 #import model
 import send_email_mailx
 import configparser
+import time
 
 #DATE DEFINITIONS
 if len(sys.argv) == 1:
@@ -25,7 +26,8 @@ run_date = datetime(date.year, date.month, date.day, hour)
 #Setting Environmental Variables
 os.system("ulimit -s unlimited") #Set it to modify for example the resource limit of the current user.
 config = configparser.ConfigParser()
-config.read(os.environ["HOME"]+'/cuba/config.ini')
+# config.read(os.environ["HOME"]+'/cuba/config.ini')
+config.read('./config.ini')
 work = config.get('BASIC','WORK').format(USER=os.environ.get('USER'))
 data = config.get('BASIC','DATA').format(USER=os.environ.get('USER'))
 inDir = config.get('BASIC','inDir').format(WORK=work, bul_date=dateBrief)
@@ -50,11 +52,12 @@ os.chdir(baseDir)
 #print("Inizio elaborazione modello WRF-MNW "+str(datetime.utcnow()))
 print("Starting of the chain at: "+str(datetime.utcnow()))
 
-sys.exit()
+# sys.exit()
 #DATA DOWNLOAD
 try:
     print("Download Started!")
-    download_data.download(run_date,work_path)
+    #download_data.download(run_date,work_path)
+    time.sleep(3)
 except SystemExit as exc:
     if exc.code == 1:
         print("Errore nel download dei dati! Interrompo l'elaborazione! "+str(datetime.utcnow()))
@@ -66,6 +69,7 @@ except SystemExit as exc:
 try:
     print("Pre-Processing started!")
     #wrf.wps(run_date, work_path)
+    time.sleep(2)
 except SystemExit as exc:
     if exc.code == 2:
         print("Error in cutting of the files! Stopping the elaboration! "+str(datetime.utcnow()))
@@ -81,6 +85,7 @@ print("Pre-Processing DONE!")
 try:
     print("Model run started!")
     #wrf.wrf(run_date, work_path)
+    time.sleep(5)
 except SystemExit as exc:
     print("Error in running the Model! Stopping the elaboration! "+str(datetime.utcnow()))
     s = send_email_mailx.mailer("Model:Problems.","Error:running:the:Model!:Stopping:the:elaboration."+str(datetime.utcnow()))
@@ -92,6 +97,7 @@ print("Model Execution DONE!")
 try:
     print("Post-Processing started!")
     #post.post(run_date, work_path)
+    time.sleep(2)
 except SystemExit as exc:
     if exc.code == 4:
         print("Error in post-processing of the files! Stopping the elaboration! "+str(datetime.utcnow()))
@@ -118,9 +124,11 @@ print("Images creation DONE!")
 try:
     print("Upload started!")
     #post.wind_map(work_path)
+    time.sleep(3)
 except SystemExit as exc:
     print("Error in uploading of the files! Stopping the elaboration! "+str(datetime.utcnow()))
     s = send_email_mailx.mailer("Upload:Problems.","Error:in:uploading:of:the:files!:Stopping:the:elaboration."+str(datetime.utcnow()))
     s.send()
     sys.exit()
+print("Data accepted by upload server.")
 print("Upload Execution DONE!")
